@@ -2,6 +2,7 @@ package edu.cnm.deepdive.nasaapod.controller;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +11,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -19,17 +21,17 @@ import edu.cnm.deepdive.android.DateTimePickerFragment;
 import edu.cnm.deepdive.android.DateTimePickerFragment.Mode;
 import edu.cnm.deepdive.android.DateTimePickerFragment.OnChangeListener;
 import edu.cnm.deepdive.nasaapod.R;
+import edu.cnm.deepdive.nasaapod.model.Apod;
 import edu.cnm.deepdive.nasaapod.viewmodel.MainViewModel;
 import java.util.Calendar;
 
 public class ImageFragment extends Fragment {
 
-  private static final String IMAGE_URL = "https://apod.nasa.gov/apod/image/2001/ic410_WISEantonucci_1824.jpg";
-
   private WebView contentView;
   private MainViewModel viewModel;
   private ProgressBar loading;
   private FloatingActionButton calendar;
+  private Apod apod;
 
   @Override
   @SuppressLint("SetJavaScriptEnabled")
@@ -53,7 +55,16 @@ public class ImageFragment extends Fragment {
           Calendar calendar = Calendar.getInstance();
           calendar.setTime(apod.getDate());
           setupCalendarPicker(calendar);
+          this.apod = apod;
         });
+    viewModel.getThrowable().observe(getViewLifecycleOwner(), (throwable -> {
+      loading.setVisibility(View.GONE);
+      Toast toast = Toast.makeText(getActivity(),
+          getString(R.string.error_message, throwable.getMessage()), Toast.LENGTH_LONG);
+      toast.setGravity(Gravity.BOTTOM, 0,
+          (int) getResources().getDimension(R.dimen.toast__vertical_margin));
+      toast.show();
+    }));
   }
 
   @SuppressLint("SetJavaScriptEnabled")
@@ -68,6 +79,10 @@ public class ImageFragment extends Fragment {
       @Override
       public void onPageFinished(WebView view, String url) {
         loading.setVisibility(View.GONE);
+        Toast toast = Toast.makeText(getActivity(), apod.getTitle(), Toast.LENGTH_LONG);
+        toast.setGravity(Gravity.BOTTOM, 0,
+            (int) getContext().getResources().getDimension(R.dimen.toast__vertical_margin));
+        toast.show();
       }
     });
     WebSettings settings = contentView.getSettings();
@@ -80,7 +95,7 @@ public class ImageFragment extends Fragment {
   }
 
   private void setupCalendarPicker(Calendar calendar) {
-    this.calendar.setOnClickListener((v) -> { // when the button gets clicked ... (line 86)
+    this.calendar.setOnClickListener((v) -> { // when the button gets clicked ... *
       DateTimePickerFragment fragment = new DateTimePickerFragment(); // get ready to pick a date ...
       fragment.setCalendar(calendar);
       fragment.setMode(Mode.DATE);
@@ -90,7 +105,7 @@ public class ImageFragment extends Fragment {
         viewModel.setApodDate(cal.getTime()); // figure out the date (and start the Retriever) ...
       });
       fragment.show(getChildFragmentManager(),
-          fragment.getClass().getName()); // show the calendar (@ line 77) ...
+          fragment.getClass().getName()); // * show the calendar
     });
   }
 
