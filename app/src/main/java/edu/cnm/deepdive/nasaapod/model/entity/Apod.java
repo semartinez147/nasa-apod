@@ -33,7 +33,7 @@ public class Apod {
   @Expose
   private String copyright;
 
-  @ColumnInfo(name = "media_type") // for setting up the table of APoDs
+  @ColumnInfo(name = "media_type") // for setting up the table of APoDs in ROOM
   @Expose
   @SerializedName("media_type") // only applies to gson reading JSON data
   private String mediaType;
